@@ -1,6 +1,8 @@
 import User from '../models/user.js';
 import z from 'zod'
 
+import { generateRefreshJWT, generateAccessJWT } from '../helpers/generateJWT.js';
+
 /**
  * 
  * Endpoint to add a user
@@ -62,36 +64,6 @@ const updateUser = async (req, res) => {
 
 /**
  * 
- * Endpoint to authenticate a user
- * 
- * @returns the User
- */
-const authenticateUser = async (req, res) => {
-    const result = validateUser(req.body)
-    if(result.error){
-        return res.status(400).json({Error: result.error.message})
-    }
-    
-    const {email, password} = req.body
-    const userExist = await User.findOne({email});
-
-    if(!userExist){
-        return res.status(401).json({error: 'The user does not exist'})
-    } 
-
-    if(await userExist.authenticatePass(password)){
-
-        res.json({userExist});
-
-        console.log('Welcome to My-Blog');
-    }else{
-        const error = new Error('El password es incorrecto');
-        res.status(403).json({msg : error.message});
-    }
-}
-
-/**
- * 
  * Endpoint to delete a user
  * 
  * @returns json wiht the answer
@@ -116,6 +88,61 @@ const deleteUser = async (req, res) => {
 
 }
 
+/**
+ * 
+ * Endpoint to authenticate a user
+ * 
+ * @returns the User
+ */
+const authenticateUser = async (req, res) => {
+    const result = validateUser(req.body)
+    if(result.error){
+        return res.status(400).json({Error: result.error.message})
+    }
+    
+    const {email, password} = req.body
+    const userExist = await User.findOne({email});
+
+    if(!userExist){
+        return res.status(401).json({error: 'The user does not exist'})
+    } 
+
+    if(await userExist.authenticatePass(password)){
+
+        const refreshToken = generateRefreshJWT(email);
+        userExist.refreshToken = refreshToken;
+
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            maxAge: 24 * 60 * 60 * 1000
+        });
+
+        res.json({
+            userExist,
+            accessToken: generateAccessJWT(email)
+        });
+        console.log('Welcome to My-Blog');
+
+
+    }else{
+        const error = new Error('El password es incorrecto');
+        res.status(403).json({msg : error.message});
+    }
+}
+
+/**
+ * 
+ * Endpoint to logout a user
+ * 
+ * @returns the User
+ */
+const logout = async (req, res) => {
+    
+    res.clearCookie('refreshToken');
+    res.json({message: 'The user is logout'});
+
+}
+
 const userSchema = z.object({
     email: z.string().email('This is not a valid email.'),
     password: z.string().min(2)
@@ -129,5 +156,6 @@ export {
     addUser,
     authenticateUser,
     updateUser,
-    deleteUser
+    deleteUser,
+    logout
 }

@@ -13,11 +13,6 @@ const userSchema = mongoose.Schema({
         require: true
     },
 
-    refreshToken: {
-        type: String,
-        default: null
-    }
-
 })
 
 userSchema.pre('save', async function(next) {
