@@ -38,7 +38,7 @@ const updateUser = async (req, res) => {
     }
 
     const {id} = req.params
-    const userExist = await User.findById(id);
+    const userExist = await User.findById({_id: id});
 
     if(!userExist){
         return res.status(401).json({error: 'The user does not exist'})
