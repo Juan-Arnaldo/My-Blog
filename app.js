@@ -5,7 +5,7 @@ import helmet from 'helmet';
 import connectDB from './config/db.js'
 
 import userRouter from './routes/userRoutes.js'
-
+import reviewRouter from './routes/reviewRouter.js'
 
 const app = express();
 app.use(express.json());
@@ -17,6 +17,7 @@ connectDB()
 
 //Routes
 app.use('/api/users', userRouter);
+app.use('/api/reviews', reviewRouter);
 
 const PORT = process.env.PORT ?? 3000;
 
