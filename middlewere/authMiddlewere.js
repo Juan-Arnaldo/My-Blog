@@ -3,8 +3,8 @@ import User from "../models/user.js";
 
 const checkAuth = async (req, res, next) => {
 
-    if(!req.headers.authorization && !req.headers.authorization.startsWith('Bearer'))
-        res.status(401).json({message: 'non-existent token'});
+    if(!req.headers.authorization || !req.headers.authorization.startsWith('Bearer'))
+        return res.status(401).json({message: 'non-existent token'});
 
     try {
 
@@ -19,7 +19,7 @@ const checkAuth = async (req, res, next) => {
         })
         
     } catch (error) {
-        console.log(error.message);
+        return res.status(500).json({message: 'internal server error'});
     }
 }
 

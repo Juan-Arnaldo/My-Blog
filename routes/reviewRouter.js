@@ -1,14 +1,11 @@
 import express  from "express";
-import checkAuth from "../middlewere/authMiddlewere.js";
-import { addReview, getAllReviews, getReviewsByType, deleteReview, updateReview } from "../controllers/reviewController.js";
+import { addReview, getAllReviews, deleteReview, updateReview } from "../controllers/reviewController.js";
 
 const router = express.Router()
 
-router.post('/', checkAuth, addReview)
-      .get('/', checkAuth, getAllReviews)
-      .patch('/:id', checkAuth, updateReview)
-      .delete('/:id', checkAuth, deleteReview);
-
-router.get('/:type', checkAuth, getReviewsByType);
+router.post('/', addReview)
+      .get('/', getAllReviews)
+      .patch('/:id', updateReview)
+      .delete('/:id', deleteReview);
 
 export default router;

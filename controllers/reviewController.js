@@ -1,5 +1,5 @@
 import Review from "../models/review.js";
-import z from 'zod';
+import { validateReview, validatePartialReview } from "../middlewere/validate.js";
 
 /**
  * 
@@ -32,34 +32,22 @@ const addReview = async (req, res) => {
  */
 const getAllReviews = async (req, res) => {
 
+    const { type } = req.query;
+
+    let query = {};
+
+    if(type) 
+        query.type = type;
+
     try {
         
-        const reviews = await Review.find();
+        const reviews = await Review.find(query);
         res.status(200).json({reviews});
         
     } catch (err) {
         res.status(500).json({message: 'internal server error'});
     }
 
-}
-
-/**
- * 
- *  Endpoint to get reviews by type
- * 
- *  @returns reviews
- */
-const getReviewsByType = async (req, res) => {
-
-    try {
-        const {type} = req.params;
-        const reviews =  await Review.find({type});
-
-        res.status(200).json({reviews});
-        
-    } catch (err) {
-        res.status(500).json({message: 'internal server error'});
-    }
 }
 
 /**
@@ -116,32 +104,9 @@ const updateReview = async (req, res) => {
     }
 }
 
-
-
-const reviewSchema = z.object({
-
-    name: z.string().max(50),
-    year: z.number().gte(1800).lte(2024),
-    genre: z.string().max(30),
-    director: z.string().max(40),
-    rating: z.number().gte(1).lte(5),
-    description: z.string().min(10),
-    type: z.string()
-
-});
-
-function validateReview(object){
-    return reviewSchema.safeParse(object);
-}
-
-function validatePartialReview(object){
-    return reviewSchema.partial().safeParse(object);
-}
-
 export {
     addReview,
     getAllReviews,
-    getReviewsByType,
     deleteReview,
     updateReview
 }

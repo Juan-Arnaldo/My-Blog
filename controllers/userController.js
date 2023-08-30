@@ -12,16 +12,22 @@ import { generateRefreshJWT, generateAccessJWT } from '../helpers/generateJWT.js
 const addUser = async (req, res) => {
     const result = validateUser(req.body)
     if(result.error){
-        return res.status(400).json({Error: result.error.message})
+        return res.status(400).json({error: JSON.parse(result.error.message)})
     }
+
+    const {email} = req.body.email; 
+
+    const userExist = await User.findOne({email})
+    if(!userExist)
+        return res.status(409).json({error: 'The user exist'})
 
     try {
         const newUser = new User(req.body);
         const userSave = await newUser.save();
 
-        res.status(200).json({User: userSave});
+        res.status(201).json({User: userSave});
     } catch (err) {
-        return res.status(400).json({message: err.message});
+        res.status(500).json({message: 'internal server error'});
     }
 }
 
@@ -32,9 +38,9 @@ const addUser = async (req, res) => {
  * @returns the User after update 
  */
 const updateUser = async (req, res) => {
-    const result = validateUser(req.body);
+    const result = validatePartialUser(req.body);
     if(result.error){
-        return res.status(400).json({Error: result.error.message})
+        return res.status(400).json({error: JSON.parse(result.error.message)})
     }
 
     const {id} = req.params
@@ -57,7 +63,7 @@ const updateUser = async (req, res) => {
         })
 
     } catch (err) {
-        console.log(err.message);
+        res.status(500).json({message: 'internal server error'});
     }
 
 }
@@ -83,9 +89,8 @@ const deleteUser = async (req, res) => {
         return res.status(200).json({message: 'The user was successfully deleted'})
         
     } catch (err) {
-        console.log(err.message);
+        res.status(500).json({message: 'internal server error'});
     }
-
 }
 
 /**
@@ -97,7 +102,7 @@ const deleteUser = async (req, res) => {
 const authenticateUser = async (req, res) => {
     const result = validateUser(req.body)
     if(result.error){
-        return res.status(400).json({Error: result.error.message})
+        return res.status(400).json({error: JSON.parse(result.error.message)})
     }
     
     const {email, password} = req.body
@@ -141,15 +146,6 @@ const logout = async (req, res) => {
     res.clearCookie('refreshToken');
     res.json({message: 'The user is logout'});
 
-}
-
-const userSchema = z.object({
-    email: z.string().email('This is not a valid email.'),
-    password: z.string().min(2)
-})
-
-function validateUser (object){
-    return userSchema.safeParse(object);
 }
 
 export {
